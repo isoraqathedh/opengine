@@ -1,0 +1,39 @@
+=opengine=, which stands for Old Phone ENGINE for largely historical reasons,
+is an application that interprets keystrokes sent to it in a special way,
+allowing for more flexibility and easier access to certain Unicode characters.
+
+This will take place over two stacks (actually queues):
+- The Main Stack  :: A stack that will eventually at *flush*
+     be exported into a string and placed into the clipboard.
+- The Other Stack :: A secondary stack that is write-only.
+     When the contents of this stack matches one element in a predefined list
+     it will empty out and place the associated character in the main stack.
+     
+The stacks are operated upon with *characters*,
+which all use these archetypical actions:
+- Append :: Add a new character to the end of one of the stacks.
+            Which one? Depends. Probably switchable.
+            This would obviously requires some secondary state,
+            possibly at the key level.
+  - Input character
+- Modify :: Change the character at the end of the list.
+            The other stack cannot be modified.
+  - The character at the end
+  - Input character
+- Delete :: Delete the character at the end of a list.
+- Flush  :: Empty out the main stack into the clipboard and exit.
+
+A *character* is an operator that has these four main types.
+
+At the key level a few more things need to be put in, including timeouts.
+Here, a key can do any of:
+
+- Input   :: Drop a character in the chosen stack.
+             The character can either append or modify the stack
+             depending on which stack is getting the character and the timer.
+             A key can also have an implicit 
+- Switch  :: Change which stack gets the character. (Unnecessary?)
+- Timeout :: Prematurely end a timer that switches the input between modify to append.
+- Time-in :: Extend that timer.
+- Delete  :: as the stack operator.
+- Flush   :: as the stack operator. Should always be <esc>.
