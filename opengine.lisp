@@ -3,7 +3,14 @@
 (in-package #:opengine)
 
 (defclass opengine-instance ()
-  ((program :reader program)
+  ((program :reader program
+            :initarg :program)
+   (last-key :accessor last-key
+             :initform nil)
+   (last-time :accessor last-time
+              :initform (now))
+   (last-iteration :accessor last-iteration
+                   :initform 0)
    (main-stack :accessor main-stack
                :initform (make-string 0))
    (other-stack :accessor other-stack
@@ -11,6 +18,14 @@
   (:documentation "Object representing an opengine instance."))
 (defvar *current-instance*)
 
+;;; Load operations
+(defun load-config (config-name)
+  (setf *current-instance*
+        (make-instance 'opengine-instance
+                       :program (with-open-file (s config-name :external-format :utf-8)
+                                  (read s)))))
+
+;;; Stack operations
 (defun append-to-main-stack (character)
   "Add a character to the main stack."
   (setf (main-stack *current-instance*)
