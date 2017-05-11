@@ -25,6 +25,13 @@
                        :program (with-open-file (s config-name :external-format :utf-8)
                                   (read s)))))
 
+;;; Data gathering operations
+(defun match-other-stack ()
+  "Check if the current other stack matches one of the presets yet.
+Return the associated value if match, nil otherwise."
+  (cdr (assoc (other-stack *current-instance*)
+              (assoc :other-stack-matches (program *current-instance*)))))
+
 ;;; Stack operations
 (defun append-to-main-stack (character)
   "Add a character to the main stack."
@@ -34,12 +41,12 @@
 (defun append-to-other-stack (character)
   "Add a character to the other stack.
 
-After this, check if the current "
+After this, check if the current other stack matches an existing stack.
+If so, delete and append associated cahracter."
   (setf (other-stack *current-instance*)
         (concatenate 'string (other-stack *current-instance*)
                      (string character)))
-  (let ((found-match (assoc (other-stack *current-instance*)
-                            (assoc :other-stack-matches (program *current-instance*)))))
+  (let ((found-match (match-other-stack)))
     (when found-match
       (append-to-main-stack (cdr found-match)))))
 
