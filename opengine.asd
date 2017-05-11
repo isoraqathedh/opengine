@@ -1,10 +1,15 @@
 ;;;; opengine.asd
 
 (asdf:defsystem #:opengine
-  :description "Describe opengine here"
+  :description "Keyboard extender."
   :author "Isoraķatheð Zorethan"
-  :license "Specify license here"
+  :license "MIT"
   :serial t
   :components ((:file "package")
-               (:file "opengine")))
-
+               (:file "opengine")
+               (:file "gui"))
+  :defsystem-depends-on (:qtools)
+  :depends-on (:qtcore :qtgui)
+  :build-operation "qt-program-op"
+  :build-pathname "opengine"
+  :entry-point "qtools-helloworld:main")
