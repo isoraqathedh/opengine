@@ -16,8 +16,8 @@
   (setf (q+:placeholder-text main-stack-display) "Main stack")
   (q+:set-read-only main-stack-display t))
 
-(define-subwidget (main main-stack-indicator) (q+:make-qlabel "•" main))
-(define-subwidget (main other-stack-indicator) (q+:make-qlabel "•" main))
+(define-subwidget (main main-stack-indicator) (q+:make-qlabel "●" main))
+(define-subwidget (main other-stack-indicator) (q+:make-qlabel "●" main))
 
 (define-subwidget (main other-stack-display) (q+:make-qlineedit main)
   (setf (q+:placeholder-text other-stack-display) "Other stack")
