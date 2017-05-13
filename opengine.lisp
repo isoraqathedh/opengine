@@ -3,8 +3,12 @@
 (in-package #:opengine)
 
 (defclass opengine-instance ()
-  ((program :reader program
-            :initarg :program)
+  ((key-list :accessor key-list
+             :initform (make-hash-table))
+   (variable-list :accessor variable-list
+                  :initform (make-hash-table))
+   (other-stack-substitutions :accessor other-stack-substitutions
+                              :initform (make-hash-table :test 'equal))
    (last-key :accessor last-key
              :initform nil)
    (last-time :accessor last-time
@@ -21,20 +25,25 @@
   (:documentation "Object representing an opengine instance."))
 (defvar *current-instance*)
 
-;;; Load operations
-(defun load-profile (config-name)
-  (setf *current-instance*
-        (make-instance 'opengine-instance
-                       :program (with-open-file (s config-name :external-format :utf-8)
-                                  (read s)))))
+(defgeneric opengine-variable (variable-name opengine-instance)
+  (:documentation "Gets the variable name associated with the instance.")
+  (:method (variable-name (opengine-instance opengine-instance))
+    (gethash variable-name (variable-list opengine-instance))))
 
-;;; Data gathering operations
-(defun match-other-stack ()
-  "Check if the current other stack matches one of the presets yet.
-Return the associated value if match, nil otherwise."
-  (cdr (assoc (other-stack *current-instance*)
-              (cdr (assoc :other-stack-matches (program *current-instance*)))
-              :test #'string=)))
+(defgeneric (setf opengine-variable) (value variable-name opengine-instance)
+  (:documentation "Sets the variable name associated with the instance.")
+  (:method (value variable-name (opengine-instance opengine-instance))
+    (setf (gethash variable-name (variable-list opengine-instance)) value)))
+
+(defgeneric get-key (key opengine-instance)
+  (:documentation "Get a key's associated sequence in the instance.")
+  (:method (key (opengine-instance opengine-instance))
+    (gethash key (key-list opengine-instance))))
+
+(defgeneric get-sequence (sequence opengine-instance)
+  (:documentation "Get a string's associated character in the instance.")
+  (:method (key (opengine-instance opengine-instance))
+    (gethash key (other-stack-substitutions opengine-instance))))
 
 (defun toggle-stacks ()
   "Change which stack is currently accepting characters."
@@ -59,7 +68,7 @@ If so, delete and append associated character."
      (setf (other-stack *current-instance*)
            (concatenate 'string (other-stack *current-instance*)
                         (string character)))
-     (let ((found-match (match-other-stack)))
+     (let ((found-match (get-sequence character *current-instance*)))
        (when found-match
          (append-to-stack found-match :main)
          (setf (other-stack *current-instance*) (make-string 0)))))))
@@ -75,10 +84,10 @@ If so, delete and append associated character."
   (ecase (current-stack *current-instance*)
     (:main (setf (main-stack *current-instance*)
                  (subseq (main-stack *current-instance*)
-                         0 (- (length (main-stack *current-instance*)) 1))))
+                         0 (1- (length (main-stack *current-instance*))))))
     (:other (setf (other-stack *current-instance*)
                   (subseq (other-stack *current-instance*)
-                          0 (- (length (other-stack *current-instance*)) 1))))))
+                          0 (1- (length (other-stack *current-instance*))))))))
 
 (defun flush ()
   (uiop:run-program '("xclip" "-selection" "c")
@@ -86,11 +95,7 @@ If so, delete and append associated character."
   (setf (main-stack *current-instance*) ""))
 
 (defun get-character-in-order (character n)
-  (let ((character-alist
-          (cdr
-           (assoc character
-                  (cdr (assoc :keys
-                              (program *current-instance*)))))))
+  (let ((character-alist (get-key character *current-instance*)))
     (first (nth (mod n (length character-alist)) character-alist))))
 
 (defun handle-incoming-character (character)
@@ -98,8 +103,7 @@ If so, delete and append associated character."
   (with-accessors ((current-stack current-stack)
                    (last-key last-key)
                    (last-time last-time)
-                   (last-iteration last-iteration)
-                   (program program)) *current-instance*
+                   (last-iteration last-iteration)) *current-instance*
     (let ((next-iteration (1+ last-iteration))
           (current-time (now)))
       (setf last-iteration 0)
@@ -114,7 +118,8 @@ If so, delete and append associated character."
          (append-to-stack character))
         ((and (eql character last-key)
               (eql current-stack :main)
-              (< (- current-time last-time) (cdr (assoc :timeout program))))
+              (< (- current-time last-time)
+                 (opengine-variable 'timeout *current-instance*)))
          (setf last-iteration next-iteration)
          (modify-main-stack (get-character-in-order character last-iteration)))
         (t
