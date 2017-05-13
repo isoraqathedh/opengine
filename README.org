@@ -37,3 +37,6 @@ Here, a key can do any of:
 - Time-in :: Extend that timer.
 - Delete  :: as the stack operator.
 - Flush   :: as the stack operator. Should always be <esc>.
+
+* The language
+opengine is programmed through a Lisp 
