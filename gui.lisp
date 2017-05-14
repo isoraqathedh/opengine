@@ -46,12 +46,14 @@
     (q+:add-layout layout main-stack-assembly)
     (q+:add-layout layout button-panel)))
 
-(define-slot (main button-pressed) ()
+(define-slot (main gui-switch-mode) (mode-name)
   (declare (connected change-stack (released)))
-  (setf (q+:text current-stack)
-        (if (string= (q+:text current-stack) "Main")
-            "Other"
-            "Main")))
+  (dolist (i (list main-stack-indicator other-stack-indicator))
+    (q+:set-style-sheet i "QLabel { color : auto; }"))
+  (q+:set-style-sheet (ecase mode-name
+                        (:main main-stack-indicator)
+                        (:other other-stack-indicator))
+                      "QLabel { color : red; }"))
 
 (defun main ()
   (with-main-window (window (make-instance 'main))))
