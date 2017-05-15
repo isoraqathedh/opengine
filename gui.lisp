@@ -46,7 +46,7 @@
     (q+:add-layout layout main-stack-assembly)
     (q+:add-layout layout button-panel)))
 
-(define-slot (main gui-switch-mode) (mode-name)
+(define-slot (main gui-switch-mode) ((mode-name symbol))
   (declare (connected change-stack (released)))
   (dolist (i (list main-stack-indicator other-stack-indicator))
     (q+:set-style-sheet i "QLabel { color : auto; }"))
