@@ -9,4 +9,12 @@
 
 (in-package #:opengine)
 
-;;
+(defun handle-incoming-command-string (string)
+  "Handle an entire incoming string at once."
+  ;; The thing about having everything there at once
+  ;; is that there's no longer any problem with figuring out timeouts.
+  ;; The downside is that there's no longer a timeout for us to wait for.
+  ;; To get around that we need an additional escape character.
+  ;; Which might need to be configured.
+  (loop for i across string
+        do t))
